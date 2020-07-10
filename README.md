@@ -60,3 +60,15 @@ inside of the hierarchical complex folder structure of GOPATH. It’s super neat
 ### Want to learn more
 There is an [example](https://github.com/golang-standards/project-layout)
 project online.
+
+## Other resources
+
+* [Crafting Interpreters](http://craftinginterpreters.com/) by Bob Nystrom.
+* [Let's build a compiler](https://generalproblem.net/lets_build_a_compiler/01-starting-out/) by Noah Zentzis.
+* [Write Yourself a Scheme in 48 Hours](https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours)
+* [Let’s Build A Simple Interpreter](https://ruslanspivak.com/lsbasi-part1/) in
+  Python.
+
+  Also when learning Rust (later on) this [repo](https://github.com/pauldix/monkey-rust)
+  (and the guy behind it) can be used to help. He also wrote a blog [post](https://www.influxdata.com/blog/rust-can-be-difficult-to-learn-and-frustrating-but-its-also-the-most-exciting-thing-in-software-development-in-a-long-time/)
+  about the subject.

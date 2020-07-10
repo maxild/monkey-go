@@ -1,2 +1,79 @@
 package lexer_test
 
+import (
+	"github.com/maxild/monkey/internal/lexer"
+	"github.com/maxild/monkey/internal/token"
+	"testing"
+)
+
+func TestNextToken(t *testing.T) {
+	input := `let five = 5;
+let ten = 10;
+
+let add = fn(x, y) {
+  x + y;
+};
+
+let result = add(five, ten);
+`
+
+	tests := []struct{
+		expectedType token.Type
+		expectedLexeme string
+	}{
+		{token.LET, "let"},
+		{token.IDENT, "five"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.LPARAN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPARAN, ")"},
+		{token.LBRACE, "{"},
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPARAN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPARAN, ")"},
+		{token.SEMICOLON, ";"},
+		{token.EOF, ""},
+	}
+
+	l := lexer.New(input)
+
+	for i, tt := range tests {
+		tok := l.NextToken()
+
+		if tok.Type != tt.expectedType {
+			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
+				i, tt.expectedType, tok.Type)
+		}
+
+		if tok.Lexeme != tt.expectedLexeme {
+			t.Fatalf("tests[%d] - lexeme wrong. expected=%q, got=%q",
+				i, tt.expectedLexeme, tok.Lexeme)
+		}
+	}
+}
+
