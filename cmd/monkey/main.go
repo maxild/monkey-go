@@ -1,10 +1,20 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
+	"github.com/maxild/monkey/internal/repl"
+	"os"
+	"os/user"
 )
 
+//TODO: Only way to quit is Ctrl+C
 func main() {
-    fmt.Printf("Monkey %s\n", "0.1")
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Hello %s! This is the Monkey programming language!\n", user.Username)
+	fmt.Printf("Feel free to type in commands\n")
+	repl.Start(os.Stdin, os.Stdout)
 }
 

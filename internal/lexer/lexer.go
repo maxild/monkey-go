@@ -15,6 +15,14 @@ func New(input string) *Lexer {
 	return l
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
 // read the next character
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -34,21 +42,48 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	// Important to scan for keywords, operators, punctuation before calling anything an identifier
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		next := l.peekChar()
+		if next == '=' {
+			prev := l.ch
+			l.readChar()
+			tok = token.Token{Type: token.EQ, Lexeme: string(prev) + string(next)}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '!':
+		next := l.peekChar()
+		if next == '=' {
+			prev := l.ch
+			l.readChar()
+			tok = token.Token{Type: token.NOT_EQ, Lexeme: string(prev) + string(next)}
+		} else {
+			tok = newToken(token.BANG, l.ch)
+		}
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
+		// TODO: == and != are missing
+	case ';':
+		tok = newToken(token.SEMICOLON, l.ch)
+	case ',':
+		tok = newToken(token.COMMA, l.ch)
 	case '(':
-		tok = newToken(token.LPARAN, l.ch)
+		tok = newToken(token.LPAREN, l.ch)
 	case ')':
-		tok = newToken(token.RPARAN, l.ch)
+		tok = newToken(token.RPAREN, l.ch)
 	case '{':
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
-	case ',':
-		tok = newToken(token.COMMA, l.ch)
-	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
 	case 0:
 		//tok = token.Token{Type: token.EOF, Lexeme: ""}
 		tok.Type = token.EOF
