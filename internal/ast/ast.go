@@ -1,5 +1,7 @@
 package ast
 
+// TODO: We need sum types in Rust, F# (GO does not support sum types)
+
 import (
 	"bytes"
 	"github.com/maxild/monkey/internal/token"
@@ -130,3 +132,41 @@ func (il *IntegerLiteral) expressionNode() {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Lexeme }
 func (il *IntegerLiteral) String() string { return il.Token.Lexeme }
 
+// Aka UnaryExpression
+type PrefixExpression struct {
+	Token token.Token	// The prefix token kind (e.g. ! or -)
+	Operator string
+	Right Expression
+}
+
+func (pe *PrefixExpression) expressionNode() {}
+func (pe *PrefixExpression) TokenLiteral() string { return pe.Token.Lexeme }
+func (pe *PrefixExpression) String() string {
+	var out bytes.Buffer
+	// wrap parenthesis around to see connection
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+	return out.String()
+}
+
+// Aka BinaryExpression
+type InfixExpression struct {
+	Token token.Token	// The infix token (kind) (e.g. +, -, *, /, ==, !=, > or <)
+	Operator string
+	Left Expression
+	Right Expression
+}
+
+func (be *InfixExpression) expressionNode() {}
+func (be *InfixExpression) TokenLiteral() string { return be.Token.Lexeme }
+func (be *InfixExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("(")
+	out.WriteString(be.Left.String())
+	out.WriteString(" " + be.Operator + " ")
+	out.WriteString(be.Right.String())
+	out.WriteString(")")
+	return out.String()
+}

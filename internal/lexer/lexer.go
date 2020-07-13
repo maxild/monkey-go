@@ -28,9 +28,11 @@ func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		// signal EOF
 		l.ch = 0
-		return
+	} else {
+		l.ch = l.input[l.readPosition]
 	}
-	l.ch = l.input[l.readPosition]
+	// we need to update the position/readPosition (even when we reach EOF)
+	// because other procedures in the lexer uses them to slice out values
 	l.position = l.readPosition
 	l.readPosition += 1
 }

@@ -152,3 +152,33 @@ if (5 < 10) {
 	}
 }
 
+func TestBug(t *testing.T) {
+	input := "-a*b"
+	l := New(input)
+
+	tok := l.NextToken()
+	if tok.Type != token.MINUS || tok.Lexeme != "-" {
+		t.Fatalf("Wanted (-, '-'), got (%s, '%s')", tok.Type, tok.Lexeme)
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.IDENT || tok.Lexeme != "a" {
+		t.Fatalf("Wanted (IDENT, 'a'), got (%s, '%s')", tok.Type, tok.Lexeme)
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.ASTERISK || tok.Lexeme != "*" {
+		t.Fatalf("Wanted (*, '*'), got (%s, '%s')", tok.Type, tok.Lexeme)
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.IDENT || tok.Lexeme != "b" {
+		t.Fatalf("Wanted (IDENT, 'b'), got (%s, '%s')", tok.Type, tok.Lexeme)
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.EOF || tok.Lexeme != "" {
+		t.Fatalf("Wanted (EOF, ''), got (%s, '%s')", tok.Type, tok.Lexeme)
+	}
+}
+
