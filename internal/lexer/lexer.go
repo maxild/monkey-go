@@ -26,10 +26,11 @@ func (l *Lexer) peekChar() byte {
 // read the next character
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
+		// signal EOF
 		l.ch = 0
-	} else {
-		l.ch = l.input[l.readPosition]
+		return
 	}
+	l.ch = l.input[l.readPosition]
 	l.position = l.readPosition
 	l.readPosition += 1
 }
@@ -71,7 +72,6 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LT, l.ch)
 	case '>':
 		tok = newToken(token.GT, l.ch)
-		// TODO: == and != are missing
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
 	case ',':

@@ -1,10 +1,34 @@
-package lexer_test
+package lexer
 
 import (
-	"github.com/maxild/monkey/internal/lexer"
 	"github.com/maxild/monkey/internal/token"
 	"testing"
 )
+
+func TestNextTokenCanBeCalledMultipleTimesAfterEof(t *testing.T) {
+	input := "5;"
+	l := New(input)
+
+	tok := l.NextToken()
+
+	if tok.Type != token.INT {
+		t.Fatalf("wrong type")
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.SEMICOLON {
+		t.Fatalf("wrong type")
+	}
+
+	tok = l.NextToken()
+	if tok.Type != token.EOF || tok.Lexeme != "" {
+		t.Fatalf("wrong type")
+	}
+	tok = l.NextToken()
+	if tok.Type != token.EOF || tok.Lexeme != "" {
+		t.Fatalf("NextToken cannot be called again and again on EOF")
+	}
+}
 
 func TestNextToken(t *testing.T) {
 	input := `let five = 5;
@@ -27,6 +51,8 @@ if (5 < 10) {
 10 == 10;
 10 != 9;
 `
+
+	// table-based testing (a la Theory in xunit.net)`
 	tests := []struct{
 		expectedType token.Type
 		expectedLexeme string
@@ -107,19 +133,21 @@ if (5 < 10) {
 		{token.EOF, ""},
 	}
 
-	l := lexer.New(input)
+	l := New(input)
 
-	for i, tt := range tests {
+	for i, test := range tests {
 		tok := l.NextToken()
 
-		if tok.Type != tt.expectedType {
+		// TODO: Convert to using github.com/stretchr/testify/assert
+		// See https://github.com/stretchr/testify
+		if tok.Type != test.expectedType {
 			t.Fatalf("tests[%d] - tokentype wrong. expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
+				i, test.expectedType, tok.Type)
 		}
 
-		if tok.Lexeme != tt.expectedLexeme {
+		if tok.Lexeme != test.expectedLexeme {
 			t.Fatalf("tests[%d] - lexeme wrong. expected=%q, got=%q",
-				i, tt.expectedLexeme, tok.Lexeme)
+				i, test.expectedLexeme, tok.Lexeme)
 		}
 	}
 }

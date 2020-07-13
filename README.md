@@ -72,3 +72,9 @@ project online.
   Also when learning Rust (later on) this [repo](https://github.com/pauldix/monkey-rust)
   (and the guy behind it) can be used to help. He also wrote a blog [post](https://www.influxdata.com/blog/rust-can-be-difficult-to-learn-and-frustrating-but-its-also-the-most-exciting-thing-in-software-development-in-a-long-time/)
   about the subject.
+
+## Rust developer environment links
+
+* [How I Start Nix](https://christine.website/blog/how-i-start-nix-2020-03-08)
+* [Rust Overlay](https://github.com/mozilla/nixpkgs-mozilla#rust-overlay)
+* [Nix Rust Development](https://duan.ca/2020/05/07/nix-rust-development/)
