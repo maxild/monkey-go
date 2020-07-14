@@ -217,3 +217,32 @@ func (bs *BlockStatement) String() string {
 	}
 	return out.String()
 }
+
+// Aka Lambda
+type FunctionLiteral struct {
+	Token token.Token 	// The 'fn' token
+	Parameters []*Identifier
+	Body *BlockStatement
+}
+
+func (fl *FunctionLiteral) expressionNode() {}
+func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Lexeme }
+func (fl *FunctionLiteral) String() string {
+	var out bytes.Buffer
+	out.WriteString(fl.TokenLiteral())
+
+	// params
+	out.WriteString("(")
+	for i, p := range fl.Parameters {
+		out.WriteString(p.String())
+		if i > 0 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteString(")")
+
+	// body
+	out.WriteString(fl.Body.String())
+
+	return out.String()
+}
