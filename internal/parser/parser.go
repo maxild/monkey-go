@@ -66,6 +66,10 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	// left denotations ("leds")
 	p.infixParseFns = make(map[token.Type]infixParseFn)
@@ -99,7 +103,18 @@ func (p *Parser) peekTokenIs(t token.Type) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) expectPeek(t token.Type) bool {
+// TODO: Either use match or matchPeek (not both)
+func (p *Parser) match(t token.Type) bool {
+	if p.currTokenIs(t) {
+		p.nextToken()
+		return true
+	} else {
+		p.matchError(t)
+		return false
+	}
+}
+
+func (p *Parser) matchPeek(t token.Type) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
@@ -111,6 +126,12 @@ func (p *Parser) expectPeek(t token.Type) bool {
 
 func (p *Parser) Errors() []string {
 	return p.errors
+}
+
+func (p *Parser) matchError(t token.Type) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead.",
+		t, p.currToken.Type)
+	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) peekError(t token.Type) {
@@ -182,7 +203,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		Token: p.currToken,
 	}
 
-	if !p.expectPeek(token.IDENT) {
+	if !p.matchPeek(token.IDENT) {
 		return nil
 	}
 
@@ -191,7 +212,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		Value: p.currToken.Lexeme,
 	}
 
-	if !p.expectPeek(token.ASSIGN) {
+	if !p.matchPeek(token.ASSIGN) {
 		return nil
 	}
 
@@ -325,6 +346,84 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	}
 	expr.Value = value
 	return expr
+}
+
+//       TRUE | FALSE
+func (p *Parser) parseBoolean() ast.Expression {
+	return &ast.Boolean{
+		Token: p.currToken,
+		Value: p.currTokenIs(token.TRUE),
+	}
+}
+
+//		LPARAN <expr> RPARAN
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	p.nextToken()
+	expr := p.parseExpression(LOWEST)
+	if !p.matchPeek(token.RPAREN) {
+		// TODO: Is this good error handling?
+		return nil
+	}
+	return expr
+}
+
+//		IF LPARAN <expr> RPARAN LBRACE <expr>+ RBRACE (ELSE LBRACE <expr>+ RBRACE)?
+func (p *Parser) parseIfExpression() ast.Expression {
+	expr := &ast.IfExpression{Token: p.currToken}
+
+	// if (...)
+	p.nextToken() // eat the IF
+	if !p.match(token.LPAREN) {
+		return nil
+	}
+	expr.Condition = p.parseExpression(LOWEST)
+	if !p.matchPeek(token.RPAREN) {
+		return nil
+	}
+
+	// { ... }
+	if !p.matchPeek(token.LBRACE) {
+		return nil
+	}
+	expr.IfArm = p.parseBlockStatement()
+	// parseBlockStatement will match the '}'
+	//if !p.matchPeek(token.RBRACE) {
+	//	return nil
+	//}
+
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+
+		if !p.matchPeek(token.LBRACE) {
+			return nil
+		}
+		expr.ElseArm = p.parseBlockStatement()
+
+		// parseBlockStatement will match the '}'
+		//if !p.matchPeek(token.RBRACE) {
+		//	return nil
+		//}
+	}
+
+	return expr
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.currToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken() // eat the ELSE
+
+	for !p.currTokenIs(token.RBRACE) && !p.currTokenIs(token.EOF) {
+		// BUG: return statement is valid here
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+
+	return block
 }
 
 //         | BANG <expr>

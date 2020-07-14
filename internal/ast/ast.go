@@ -170,3 +170,50 @@ func (be *InfixExpression) String() string {
 	out.WriteString(")")
 	return out.String()
 }
+
+type Boolean struct {
+	Token token.Token // The TRUE or FALSE token
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+func (b *Boolean) TokenLiteral() string { return b.Token.Lexeme }
+func (b *Boolean) String() string { return b.Token.Lexeme }
+
+// Aka ConditionalExpression (catamorphism, ternary operator)
+type IfExpression struct {
+	Token token.Token		// The IF token
+	Condition Expression
+	IfArm *BlockStatement 	// each arm can have many statements
+	ElseArm *BlockStatement	// do.
+}
+
+func (ie *IfExpression) expressionNode() {}
+func (ie* IfExpression) TokenLiteral() string { return ie.Token.Lexeme }
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(ie.IfArm.String())
+	if ie.ElseArm != nil {
+		out.WriteString("else")
+		out.WriteString(ie.ElseArm.String())
+	}
+	return out.String()
+}
+
+type BlockStatement struct {
+	Token token.Token		// The '{' token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) expressionNode() {}
+func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Lexeme }
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+	// TODO: What about surrounding { ... }
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
