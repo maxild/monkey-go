@@ -5,6 +5,7 @@ package ast
 import (
 	"bytes"
 	"github.com/maxild/monkey/internal/token"
+	"strings"
 )
 
 type Node interface {
@@ -192,11 +193,12 @@ func (ie *IfExpression) expressionNode() {}
 func (ie* IfExpression) TokenLiteral() string { return ie.Token.Lexeme }
 func (ie *IfExpression) String() string {
 	var out bytes.Buffer
-	out.WriteString("if")
+	out.WriteString("if (")
 	out.WriteString(ie.Condition.String())
+	out.WriteString(") ")
 	out.WriteString(ie.IfArm.String())
 	if ie.ElseArm != nil {
-		out.WriteString("else")
+		out.WriteString(" else ")
 		out.WriteString(ie.ElseArm.String())
 	}
 	return out.String()
@@ -211,10 +213,11 @@ func (bs *BlockStatement) expressionNode() {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Lexeme }
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
-	// TODO: What about surrounding { ... }
+	out.WriteString("{ ")
 	for _, s := range bs.Statements {
 		out.WriteString(s.String())
 	}
+	out.WriteString(" }")
 	return out.String()
 }
 
@@ -234,15 +237,39 @@ func (fl *FunctionLiteral) String() string {
 	// params
 	out.WriteString("(")
 	for i, p := range fl.Parameters {
-		out.WriteString(p.String())
 		if i > 0 {
 			out.WriteString(", ")
 		}
+		out.WriteString(p.String())
 	}
-	out.WriteString(")")
+	out.WriteString(") ")
 
 	// body
 	out.WriteString(fl.Body.String())
+
+	return out.String()
+}
+
+type CallExpression struct {
+	Token token.Token 	// The '(' token
+	Function Expression
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) TokenLiteral() string { return ce.Token.Lexeme }
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+
+	args := []string{}
+	for _, a := range ce.Arguments {
+		args = append(args, a.String())
+	}
+
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
 
 	return out.String()
 }

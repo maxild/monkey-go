@@ -33,6 +33,9 @@ var precedences = map[token.Type]int{
 	token.MINUS:    SUM,
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
+	// NOTE that '(' can act like a binary operator, where "left" operand
+	// is function and "right" operand are the args
+	token.LPAREN:   CALL,
 	// not defined for prefix operators (-, !)
 }
 
@@ -60,6 +63,8 @@ type Parser struct {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
+	// NOTE: Operators can be both prefix and infix ( '-', '(' )
+
 	// null denotations ("nuds")
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
@@ -82,6 +87,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// read two tokens so currToken and peekToken are both defined
 	// (even though this seems a little weird, l.NextToken can be called multiple times after EOF)
@@ -429,6 +435,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 
 	return fun
 }
+
 //  <params> := LPARAN (ID (COMMA ID)+)? RPARAN
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	var ids []*ast.Identifier
@@ -494,10 +501,45 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Token:    p.currToken,
 		Operator: p.currToken.Lexeme,
 		Left:     left,
-   	}
+	}
 	// The precedence of the binary operator
 	precedence := p.currPrecedence()
 	p.nextToken()
 	expr.Right = p.parseExpression(precedence) // recursive call
 	return expr
+}
+
+func (p *Parser) parseCallExpression(left ast.Expression) ast.Expression {
+	expr := &ast.CallExpression{
+		Token:    p.currToken,
+		Function: left,
+	}
+	expr.Arguments = p.parseCallArguments()
+	return expr
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken() // eat "(' (protocol says that ')' is the current token after parse)
+		return args
+	}
+
+	// first arg
+	p.nextToken() // eat '('
+	args = append(args, p.parseExpression(LOWEST))
+
+	// other args
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken() // eat COMMA
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.matchPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
