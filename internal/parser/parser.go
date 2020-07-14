@@ -18,11 +18,12 @@ const (
 	SUM         // +
 	PRODUCT     // *
 	// Unary operators
-	PREFIX      // -X or !X
+	PREFIX // -X or !X
 	// function application
-	CALL        // myFunc(X)
+	CALL // myFunc(X)
 )
 
+// Table of precedence per token (kind) is defined for all infix operators
 var precedences = map[token.Type]int{
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
@@ -32,7 +33,11 @@ var precedences = map[token.Type]int{
 	token.MINUS:    SUM,
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
+	// not defined for prefix operators (-, !)
 }
+
+// TODO: What about left and right associative operators?
+// All our operators are left associative, but there could be right-associative operators in a language
 
 type (
 	prefixParseFn func() ast.Expression
@@ -55,12 +60,14 @@ type Parser struct {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
+	// null denotations ("nuds")
 	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
+	// left denotations ("leds")
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -171,13 +178,18 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // <let_stmt> -> LET IDENT ASSIGN <expr> SEMICOLON
 func (p *Parser) parseLetStatement() *ast.LetStatement {
-	stmt := &ast.LetStatement{Token: p.currToken}
+	stmt := &ast.LetStatement{
+		Token: p.currToken,
+	}
 
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}
 
-	stmt.Name = &ast.Identifier{Token: p.currToken, Value: p.currToken.Lexeme}
+	stmt.Name = &ast.Identifier{
+		Token: p.currToken,
+		Value: p.currToken.Lexeme,
+	}
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
@@ -194,7 +206,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 // <return_stmt> := RETURN <expr> SEMICOLON
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	stmt := &ast.ReturnStatement{Token: p.currToken}
+	stmt := &ast.ReturnStatement{
+		Token: p.currToken,
+	}
 
 	p.nextToken()
 
@@ -207,7 +221,9 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 // wrapper/adapter
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.currToken}
+	stmt := &ast.ExpressionStatement{
+		Token: p.currToken,
+	}
 
 	stmt.Expression = p.parseExpression(LOWEST)
 
@@ -217,11 +233,15 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) eatOptionalSemicolon() {
-	// TODO: The semicolon optional? Is this GOOD??!??
+	// TODO: The semicolon is optional? Is this GOOD??!??
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 }
+
+//
+// Pratt (Top-Down Operator Precedence) Parser
+//
 
 // TODO: We can only parse prefix expressions (see the table)
 // <expr> :=
@@ -229,6 +249,9 @@ func (p *Parser) eatOptionalSemicolon() {
 //         | BANG <expr>
 //         | MINUS <expr>
 //		   | INT
+// NOTE: precedence tells the parseExpression function which expression can be parsed by that call
+//       If precedence is lower for the following token than is allowed by the precedence argument,
+//       the parser will stop parsing and just return what it has so far.
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	// table-driven parser functions
 	prefix := p.prefixParseFns[p.currToken.Type]
@@ -244,7 +267,19 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	// with higher precedence we call the associated parser function
 	// That is we call any associated parser function until we encounter
 	// a token/operator that has higher precedence
+
+	// precedence represents the "right binding power" of the caller. If precedence is very high, then
+	// the loop will not be executed, and no other infixParseFn will get a chance to
+	// create a binary expression with leftExpr as the left arm. Instead leftExpr will
+	// return as a "right" arm to whatever expression was previously being parsed in order
+	// for this expression to bind with higher precedence.
+
+	// The BOOK calls precedence "the right binding power" of the prev operator (should it bind as right "arm")
+	// The BOOK calls p.peekPrecedence "the left binding power" of the next operator (should it bind as "left arm")
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		// If we get here another infix parser function is going to get our leftExpr as a left arm
+		// This means the precedence of the left operator is lower than the precedence of
+		// the right operator in the current context
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExpr
@@ -253,21 +288,35 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		// token was an infix token, and we have a binary operator (infix) expression
 		p.nextToken()
 
-		// call builder
+		// call builder: This will "suck in" the leftExpr as the left "arm" of some infix expression
 		leftExpr = infix(leftExpr)
 	}
 
 	return leftExpr
 }
 
+// NOTE: None of the following registered (parser) functions does call nextToken unless
+//       they need to parse 2 or more tokens. If they are parsing 2 tokens they will call
+//       nextToken once, parsing 3 tokens means calling nextToken twice etc. Also if the
+//       parser function calls back into parseExpression (kind of like a recursive call)
+//       this means the same rules apply, and nextToken will be called such that peekToken
+//		 is pointing at the following token after the production LHS have been recognized.
+
+// non-recursive
 //         | ID
 func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Identifier{Token: p.currToken, Value: p.currToken.Lexeme}
+	return &ast.Identifier{
+		Token: p.currToken,
+		Value: p.currToken.Lexeme,
+	}
 }
 
+// non-recursive
 //		   | INT
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	expr := &ast.IntegerLiteral{Token: p.currToken}
+	expr := &ast.IntegerLiteral{
+		Token: p.currToken,
+	}
 	value, err := strconv.ParseInt(p.currToken.Lexeme, 0, 64)
 	if err != nil {
 		msg := fmt.Sprintf("could not parse %q as integer", p.currToken.Lexeme)
@@ -281,7 +330,10 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 //         | BANG <expr>
 //         | MINUS <expr>
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	expr := &ast.PrefixExpression{Token: p.currToken, Operator: p.currToken.Lexeme}
+	expr := &ast.PrefixExpression{
+		Token:    p.currToken,
+		Operator: p.currToken.Lexeme,
+	}
 	p.nextToken()
 	expr.Right = p.parseExpression(PREFIX) // recursive call
 	return expr
@@ -290,7 +342,11 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 //		   | <expr> OP <expr>
 // where OP in (+, -, *, /, ==, !=, >, <)
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	expr := &ast.InfixExpression{Token: p.currToken, Operator: p.currToken.Lexeme, Left: left}
+	expr := &ast.InfixExpression{
+		Token:    p.currToken,
+		Operator: p.currToken.Lexeme,
+		Left:     left,
+   	}
 	// The precedence of the binary operator
 	precedence := p.currPrecedence()
 	p.nextToken()
