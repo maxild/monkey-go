@@ -61,6 +61,34 @@ inside of the hierarchical complex folder structure of GOPATH. It’s super neat
 There is an [example](https://github.com/golang-standards/project-layout)
 project online.
 
+## Pratt Parser Resources
+
+* [Introduction to Pratt Parsing and its terminology](https://abarker.github.io/typped/pratt_parsing_intro.html) Python
+* [How Desmos uses Pratt Parsers](https://engineering.desmos.com/articles/pratt-parser/)
+* [Pratt Parsing](https://dev.to/jrop/pratt-parsing)
+
+* [Top Down Operator Precedence]() (2007) by Douglas Crockford
+* [Simple Top-Down Parsing in Python](https://effbot.org/zone/simple-top-down-parsing.htm) (2008) by Fredrik Lund
+* [Top-Down operator precedence parsing](https://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing) (2010) by Eli Bendersky) by Eli Bendersky
+* [Pratt Parsers: Expression Parsing Made Easy](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/) (2011) by Bob Nystrom
+
+### Great overview of [Andy Chu](http://andychu.net/)
+
+This [overview](http://www.oilshell.org/blog/2017/03/31.html) is great.
+
+* [Pratt Parsing and Precedence Climbing Are the Same Algorithm](http://www.oilshell.org/blog/2016/11/01.html)
+* [Review of Pratt/TDOP Parsing Tutorials](http://www.oilshell.org/blog/2016/11/02.html)
+* [Pratt Parsing Without Prototypal Inheritance, Global Variables, Virtual Dispatch, or Java](http://www.oilshell.org/blog/2016/11/03.html)
+* [Pratt Parsing Demo](https://github.com/andychu/pratt-parsing-demo) in Python
+
+* [Parsing Expressions by Recursive Descent](http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm) by Thedore Norvell
+* [From Precedence Climbing to Pratt Parsing](https://www.engr.mun.ca/~theo/Misc/pratt_parsing.htm) by Theodore Norvell
+
+* [Simple but Powerful Pratt Parsing](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
+  in Rust
+
+* [Jean-Marc Bourguet](https://github.com/bourguet/operator_precedence_parsing)
+
 ## Other resources
 
 * [Crafting Interpreters](http://craftinginterpreters.com/) by Bob Nystrom.
