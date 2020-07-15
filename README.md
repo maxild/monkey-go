@@ -67,12 +67,12 @@ project online.
 * [How Desmos uses Pratt Parsers](https://engineering.desmos.com/articles/pratt-parser/)
 * [Pratt Parsing](https://dev.to/jrop/pratt-parsing)
 
-* [Top Down Operator Precedence]() (2007) by Douglas Crockford
+* [Top Down Operator Precedence](https://crockford.com/javascript/tdop/tdop.html) (2007) by Douglas Crockford. [YouTube video about syntax and tdop](https://www.youtube.com/watch?v=Nlqv6NtBXcA) featuring Douglas Crockford
 * [Simple Top-Down Parsing in Python](https://effbot.org/zone/simple-top-down-parsing.htm) (2008) by Fredrik Lund
-* [Top-Down operator precedence parsing](https://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing) (2010) by Eli Bendersky) by Eli Bendersky
+* [Top-Down operator precedence parsing](https://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing) (2010) by Eli Bendersky
 * [Pratt Parsers: Expression Parsing Made Easy](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/) (2011) by Bob Nystrom
 
-### Great overview of [Andy Chu](http://andychu.net/)
+### Great(!) overview by [Andy Chu](http://andychu.net/)
 
 This [overview](http://www.oilshell.org/blog/2017/03/31.html) is great.
 
